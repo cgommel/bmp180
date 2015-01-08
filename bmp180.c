@@ -82,6 +82,42 @@ int reg_read_short(int handle, uint8_t devaddr, uint8_t regaddr,
 	return 0;
 }
 
+typedef struct {
+	int16_t AC1; // =   408;
+	int16_t AC2; // =   -72;
+	int16_t AC3; // =-14383;
+	uint16_t AC4; //=32741;
+	uint16_t AC5; //=32757;
+	uint16_t AC6; //=23153;
+	int16_t B1; //=   6190;
+	int16_t B2; //=      4;
+	int16_t MB; //= -32768;
+	int16_t MC; //=  -8711;
+	int16_t MD; //=   2868;
+}bmp180_calibration;
+
+#define BMP180_I2C_ADDR (0xAA)
+
+int bmp180_read_cal (int fd, bmp180_calibration* cal)
+{
+    int res=0;
+	res|=reg_read_short(fd,BMP180_I2C_ADDR,0xaa,(uint16_t*)&cal->AC1);
+	res|=reg_read_short(fd,BMP180_I2C_ADDR,0xac,(uint16_t*)&cal->AC2);
+	res|=reg_read_short(fd,BMP180_I2C_ADDR,0xae,(uint16_t*)&cal->AC3);
+	res|=reg_read_short(fd,BMP180_I2C_ADDR,0xb0,(uint16_t*)&cal->AC4);
+	res|=reg_read_short(fd,BMP180_I2C_ADDR,0xb2,(uint16_t*)&cal->AC5);
+	res|=reg_read_short(fd,BMP180_I2C_ADDR,0xb4,(uint16_t*)&cal->AC6);
+
+	res|=reg_read_short(fd,BMP180_I2C_ADDR,0xb6,(uint16_t*)&cal->B1);
+	res|=reg_read_short(fd,BMP180_I2C_ADDR,0xb8,(uint16_t*)&cal->B2);
+
+	res|=reg_read_short(fd,BMP180_I2C_ADDR,0xba,(uint16_t*)&cal->MB);
+	res|=reg_read_short(fd,BMP180_I2C_ADDR,0xbc,(uint16_t*)&cal->MC);
+	res|=reg_read_short(fd,BMP180_I2C_ADDR,0xbe,(uint16_t*)&cal->MD);
+
+	return res;
+}
+
 int main(void) {
 	const char* device = "/dev/i2c-1";
 	int fd = open(device, O_RDWR);
@@ -92,6 +128,7 @@ int main(void) {
 
 	ioctl(fd, I2C_TIMEOUT, 3); // i2c timeout, 1 for 10ms ; if too small, i2c may lose response
 	ioctl(fd, I2C_RETRIES, 3);    // i2c retry limit
+
 
 
 	return (0);
