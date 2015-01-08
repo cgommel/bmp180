@@ -132,7 +132,9 @@ int main(void) {
 	bmp180_calibration cal;
 
 	if(0==bmp180_read_cal(fd,&cal))
-        printf("Calibration read\n",cal.AC1);
+{
+//        printf("Calibration read\n",cal.AC1);
+}
 	else
 	{
 		printf("Error reading calibration\n");
@@ -168,7 +170,7 @@ int main(void) {
 	X2=cal.MC*(1<<11)/(X1+cal.MD);
 	B5=(X1+X2);
 	T=(B5+8)/(1<<4);
-    printf("Temperature is %i.%i°C\n",T/10,T%10);
+//    printf("Temperature is %i.%i°C\n",T/10,T%10);
  
  B6=B5-4000;
     X1=(cal.B2*(B6*B6/(1<<12)))/(1<<11);
@@ -189,10 +191,12 @@ int main(void) {
     X2=(-7357*p)/(1<<16);
     p=p+(X1+X2+3791)/(1<<4);
     
-    printf("Pressure is %i Pa\n",p);
+//    printf("Pressure is %i Pa\n",p);
 	 double p0;
     double alt=125;
     p0=((double)p)/pow(1-alt/44330.0,5.255);
-    printf("Assuming we are at %.1f m elevation the Pressure at sea level is %0.1f Pa\n",alt,p0);
+//    printf("Assuming we are at %.1f m elevation the Pressure at sea level is %0.1f hPa\n",alt,p0/100);
+    printf("%i.%i C;",T/10,T%10);
+    printf("%0.1f hPa\n",p0/100);
 	return (0);
 }
