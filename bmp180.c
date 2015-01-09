@@ -82,6 +82,33 @@ int reg_read_short(int handle, uint8_t devaddr, uint8_t regaddr,
 	return 0;
 }
 
+int reg_read_24(int handle, uint8_t devaddr, uint8_t regaddr, int32_t* content) {
+	struct i2c_rdwr_ioctl_data iocall;    // structure pass to i2c driver
+	struct i2c_msg messages[2];
+	uint8_t buffer[3];
+
+	iocall.nmsgs = 2;
+	iocall.msgs = messages;
+
+	messages[0].addr = devaddr;
+	messages[0].flags = 0; //write
+	messages[0].buf = (char*) &regaddr;
+	messages[0].len = 1;
+
+	messages[1].addr = devaddr;
+	messages[1].flags = I2C_M_RD; //READ
+	messages[1].buf = (char*) buffer;
+	messages[1].len = 3;
+
+	if (ioctl(handle, I2C_RDWR, (unsigned long) &iocall) < 0) {
+		printf("error during reg_read_short()\n");
+		return -1;
+	}
+
+	*content = (buffer[0] << 16) | (buffer[1] << 8) | buffer[2];
+	return 0;
+}
+
 typedef struct {
 	int16_t AC1; // =   408;
 	int16_t AC2; // =   -72;
@@ -148,7 +175,7 @@ int main(void) {
 	int32_t B7;
 	int32_t T;
 	int32_t p;
-	int16_t oss = 0;
+	int16_t oss = 3;
 
 	reg_write_byte(fd, BMP180_I2C_ADDR, 0xf4, 0x2e); //Start Temperature Measurement
 	usleep(4500); //Wait for Temperature measurement
@@ -156,10 +183,11 @@ int main(void) {
 	reg_read_short(fd, BMP180_I2C_ADDR, 0xf6, &temp16);
 	int32_t UT = temp16;
 
-	reg_write_byte(fd, BMP180_I2C_ADDR, 0xf4, 0x34); //Start Pressure Measurement
-	usleep(76500); //Wait for extremly precise pressure measurement
-	reg_read_short(fd, BMP180_I2C_ADDR, 0xf6, &temp16);
-	int32_t UP = temp16;
+	reg_write_byte(fd, BMP180_I2C_ADDR, 0xf4, 0x34 + (oss << 6)); //Start Pressure Measurement
+	usleep(25500); //Wait for precise pressure measurement
+	int32_t UP;
+	reg_read_24(fd, BMP180_I2C_ADDR, 0xf6, &UP);
+	UP = UP >> (8 - oss);
 
 	X1 = (UT - cal.AC6) * cal.AC5 / (1 << 15);
 	X2 = cal.MC * (1 << 11) / (X1 + cal.MD);
