@@ -216,10 +216,13 @@ int main(void) {
 
 //    printf("Pressure is %i Pa\n",p);
 	double p0;
+        double pd;
+	pd=(double)p;
 	double alt = 125;
-	p0 = ((double) p) / pow(1 - alt / 44330.0, 5.255);
+	p0 =  p / pow(1 - alt / 44330.0, 5.255);
 //    printf("Assuming we are at %.1f m elevation the Pressure at sea level is %0.1f hPa\n",alt,p0/100);
-	printf("%i.%i C;", T / 10, T % 10);
-	printf("%0.1f hPa\n", p0 / 100);
+	printf("%i.%i;", T / 10, T % 10);
+	printf("%0.1f;", pd / 100);
+	printf("%0.1f\n", p0 / 100);
 	return (0);
 }
